@@ -148,7 +148,7 @@ def rho(To, S=S0):
     return density
 
 
-def q(To, D, parms):
+def q(To, S, D, parms):
     """Ocean circulation components.
 
     Parameters
@@ -171,7 +171,7 @@ def q(To, D, parms):
     tau, kappav, kappagm = parms[:3]
 
     # tropics -> north and north -> deep
-    rhot, rhon = rho(To)[:2]
+    rhot, rhon = rho(To, S)[:2]
     gp = g*(rhon - rhot)/rho0
     qn = gp*(D**2)/(2.0*fn)
 
@@ -325,7 +325,7 @@ def deltaSVo(q, S, D, parms, psiamoc_ti=None):
     # Total salt increments
     comps = np.array([t_comps, n_comps, d_comps, s_comps])
     Vocean = np.array([Vt(D), Vn, Vtotal - (Vn + Vs + Vt(D)), Vs])
-    ocn_flux_comps = comps/Vocean
+    ocn_flux_comps = comps/Vocean[:, None]
     total = np.sum(comps, axis=1)
     return total, ocn_flux_comps
 
@@ -366,7 +366,7 @@ def ocean_step(To, S, D, parms, Ta, TanmTon_ti, psiamoc_ti, TotmTon_ti):
 
     """
     # Circulation
-    qstep = q(To, D, parms)
+    qstep = q(To, S, D, parms)
 
     # Pycnocline depth
     Dstep = D + dDdt(D, qstep)*deltat
@@ -462,7 +462,7 @@ def forward_step(Ta, To, S, D, parms, Tar, toa_flux, Qtoap,
     """
 
     # Ocean step
-    Tostep, Dstep, Sstep, qstep, dTocomps, dScomps = ocean_step(To, S, D,
+    Tostep, Sstep, Dstep, qstep, dTocomps, dScomps = ocean_step(To, S, D,
                                                                 parms,
                                                                 Ta, TanmTon_ti,
                                                                 psiamoc_ti,
@@ -594,11 +594,12 @@ def run(init,
         TotmTon_out[ti] = To[0] - To[1]
 
     # Output diagnostics
-    final_state = np.concatenate((Ta, To, [D], toa_flux_step))
+    final_state = np.concatenate((Ta, To, S, [D], toa_flux_step))
 
     # Calculate annual means
     diagnostics = {"final_state": final_state, "parm": parms,
                    "Ta": Ta_out, "To": To_out, "D": D_out,
+                   "S": S_out, "dS_out": dS_out,
                    "qstep": qstep_out, "dTa": dTa_out, "dTo": dTo_out,
                    "TanmTon": TanmTon_out, "psiamoc": psiamoc_out,
                    "TotmTon": TotmTon_out,
