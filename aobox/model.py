@@ -485,7 +485,8 @@ def run(init,
         Tar=None,
         TanmTon_star=None,
         psiamoc_star=None,
-        TotmTon_star=None):
+        TotmTon_star=None,
+        fix_salt=False):
     """Run the atmosphere-ocean box model.
 
     Parameters
@@ -570,6 +571,10 @@ def run(init,
                               None)}[forcing_type]
         Qtoap_ti, toa_flux, Tar = forcing
 
+        # Fixed salt?
+        if fix_salt:
+            S = np.array([S0, S0, S0, S0])
+
         # Step box model forward
         prog_vars, diag_vars, toa_flux_step = forward_step(Ta, To, S, D, parms,
                                                            Tar, toa_flux,
@@ -603,5 +608,5 @@ def run(init,
                    "qstep": qstep_out, "dTa": dTa_out, "dTo": dTo_out,
                    "TanmTon": TanmTon_out, "psiamoc": psiamoc_out,
                    "TotmTon": TotmTon_out,
-                   "Qsurf": -1.0*dTa_out[1, 0], "Psi": psiamoc_out*1e-6}
+                   "Qsurf": -1.0*dTa_out[:, 0], "Psi": qstep_out*1e-6}
     return diagnostics

@@ -2,12 +2,11 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import numpy as np
 from matplotlib.colors import Normalize
 
 
 def schematic(data, xmax=20, ymax=10, fs=22.0,
-              atm_box_color='skyblue', ocn_box_color='royalblue'):
+              atm_box_color='skyblue', ocn_box_color='royalblue', ax=None):
     """Make an annotated schematic."""
     # Unpack data
     Ta, To, S, D = data[:3], data[3:7], data[7:11], data[11]
@@ -21,10 +20,6 @@ def schematic(data, xmax=20, ymax=10, fs=22.0,
     temp_norm = Normalize(vmin=0.0, vmax=30.0)
     salt_cmap = plt.get_cmap('viridis')
     salt_norm = Normalize(vmin=25.0, vmax=45.0)
-    
-    # Initialise the plot
-    fig, ax = plt.subplots(1, 1, figsize=(xmax, ymax), dpi=80,
-                           tight_layout=True)
 
     # Add boxes
     SL = patches.Rectangle((0, 0), xmax*0.05, ymax*0.5, lw=5,
@@ -88,25 +83,28 @@ def schematic(data, xmax=20, ymax=10, fs=22.0,
             ha='center', va='top', fontsize=fs)
 
     # HF comps
-    ax.annotate('', (0.15*xmax, 0.45*ymax), (0.15*xmax, 0.55*ymax),
-                arrowprops={'arrowstyle': '<-', 'lw': 0.4*Qsurf[2],
+    ax.annotate('', (0.15*xmax, 0.475*ymax), (0.15*xmax, 0.525*ymax),
+                arrowprops={'arrowstyle': '<-' if Qsurf[2] < 0 else '->',
+                            'lw': 0.4*Qsurf[2],
                             'color': 'r'})
     ax.text(0.15*xmax, 0.55*ymax + dy,
             r'$Q_{surf,S}$'+'\n'+'$= {:.1f}$ W m'.format(Qsurf[2])+r'$^{-2}$',
             ha='center', va='bottom', fontsize=fs, color='r')
 
-    ax.annotate('', (0.5*xmax, 0.45*ymax), (0.5*xmax, 0.55*ymax),
-                arrowprops={'arrowstyle': '->', 'lw': 0.4*Qsurf[0],
+    ax.annotate('', (0.5*xmax, 0.475*ymax), (0.5*xmax, 0.525*ymax),
+                arrowprops={'arrowstyle': '<-' if Qsurf[0] < 0 else '->',
+                            'lw': 0.4*Qsurf[0],
                             'color': 'r'})
     ax.text(0.5*xmax, 0.55*ymax + dy,
             r'$Q_{surf,T}$'+'\n'+'$= {:.1f}$ W m'.format(Qsurf[0])+r'$^{-2}$',
             ha='center', va='bottom', fontsize=fs, color='r')
 
-    ax.annotate('', (0.85*xmax, 0.45*ymax), (0.85*xmax, 0.55*ymax),
-                arrowprops={'arrowstyle': '<-', 'lw': 0.4*Qsurf[1],
+    ax.annotate('', (0.85*xmax, 0.475*ymax), (0.85*xmax, 0.525*ymax),
+                arrowprops={'arrowstyle': '<-' if Qsurf[1] < 0 else '->',
+                            'lw': 0.4*Qsurf[1],
                             'color': 'r'})
     ax.text(0.85*xmax, 0.55*ymax + dy,
-            r'$Q_{surf,S}$'+'\n'+'$= {:.1f}$ W m'.format(Qsurf[1])+r'$^{-2}$',
+            r'$Q_{surf,N}$'+'\n'+'$= {:.1f}$ W m'.format(Qsurf[1])+r'$^{-2}$',
             ha='center', va='bottom', fontsize=fs, color='r')
 
     # Atmos temps
@@ -165,4 +163,5 @@ def schematic(data, xmax=20, ymax=10, fs=22.0,
     ax.set_xlim(-dx, xmax+dx)
     ax.set_ylim(-dy, ymax+dy)
     ax.axis('off')
-    return fig
+    return ax
+
