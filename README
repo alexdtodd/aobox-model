@@ -1,0 +1,6 @@
+aobox-model
+
+Package to implement a coupled, atmosphere-ocean conceptual model. Based on
+Johnson et al., (2007), Gnanadesikan (1999) and Marotzke and Stone (1995) etc.
+
+TODO
