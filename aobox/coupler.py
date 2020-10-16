@@ -1,6 +1,6 @@
 # coupler.py
 
-import numpy as np
+# import numpy as np
 import constants
 import atmosphere
 
@@ -32,7 +32,7 @@ def surface_latent_heat_flux(humidity, temp_ocean, parms):
 
     """
     # Unpack parms
-    tau_q = parms[-1]
+    tau_q = parms[3]
     lambda_q = 1/(constants.SEC_PER_DAY*tau_q)
 
     ocean_qsat = atmosphere.saturation_specific_humidity(temp_ocean[atm_inds])

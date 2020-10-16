@@ -32,7 +32,7 @@ def saturation_specific_humidity(temp):
 
     """
     temp_kelvin = temp + constants.DEGC_TO_KELVIN
-    
+
     # Linearised Clausius-Clapeyron equation
     frac = (2.0*(0.622*constants.SATURATION_VAPOUR_PRESSURE /
                  constants.SURFACE_PRESSURE))
@@ -123,8 +123,9 @@ def delta_temp_atmos_delta_t(temp_atmos, temp_ocean, humidity, parms,
     v_m, lambda_LW = parms[-2:]
 
     # convert W to K s-1
-    heat_to_temp = 1.0/(constants.ATMOS_SPECIFIC_HEAT_CAPACITY
-                        * constants.RHO_ATMOS * constants.ATMOS_VOLUME)
+    heat_to_temp = (1.0
+                    / (constants.ATMOS_SPECIFIC_HEAT_CAPACITY
+                       * constants.RHO_ATMOS * constants.VOLUME_ATMOS))
 
     # Heat from TOA flux
     if temp_atmos_star is None:
@@ -135,7 +136,8 @@ def delta_temp_atmos_delta_t(temp_atmos, temp_ocean, humidity, parms,
         toa_flux = toa/constants.AREA_ATMOS
 
     # Heat from LW feedback
-    net_toa = toa - lambda_LW*temp_atmos*constants.AREA_ATMOS
+    net_toa = (toa - lambda_LW * (temp_atmos + constants.DEGC_TO_KELVIN)
+               * constants.AREA_ATMOS)
 
     # Heat from meridional mixing
     nmix = (constants.N_ATMOS_BOUNDARY*v_m*(temp_atmos[0] - temp_atmos[1])
@@ -154,25 +156,43 @@ def delta_temp_atmos_delta_t(temp_atmos, temp_ocean, humidity, parms,
                * constants.WATER_EVAPORATION_LATENT_HEAT)
 
     # Total heat tendency
-    comps = np.array([oce_shf, mix, net_toa, pre_lhf]).T
+    comps = np.array([-1.0*oce_shf, mix, pre_lhf, net_toa]).T
     total = np.sum(comps, axis=1)
 
     # Convert heat tend to temp tend
     tend = total*heat_to_temp
-    flux_comps = comps/constants.AREA_ATMOS
+    flux_comps = comps/constants.AREA_ATMOS[:, None]
     return tend, flux_comps, toa_flux
 
 
 def delta_humidity_delta_t(temp_atmos, temp_ocean, humidity, parms):
     """Atmosphere box humidity tendency.
 
+    Parameters
+    ----------
+    temp_atmos : ndarray
+        Atmosphere box [T, N, S] temperatures in degC.
+
+    temp_ocean : ndarray
+        Ocean box [T, N, D, S] temperatures in degC.
+
+    humidity : ndarray
+        Atmosphere box [T, N, S] humidity in kg kg^-1.
+
+    parms : ndarray
+        Parameters [tau, kappa_v, kappa_GM, tau_q, tau_theta, v_m, lambda_LW].
+
+    Returns
+    -------
+    total_tend : ndarray
+        Atmosphere box [T, N, S] humidity tendency in kg kg^-1 s^-1.
 
     """
     # Unpack parms
     v_m = parms[-2]
 
     # Components
-    oce_lhf = coupler.surface_latent_heat_flux(humidity, temp_ocean, parms)
+    oce_lhf = -1*coupler.surface_latent_heat_flux(humidity, temp_ocean, parms)
     oce_lhf_mass_tend = oce_lhf/constants.WATER_EVAPORATION_LATENT_HEAT
 
     pre_mass_tend = (precipitation_flux(humidity, temp_atmos)
@@ -190,4 +210,3 @@ def delta_humidity_delta_t(temp_atmos, temp_ocean, humidity, parms):
                   / constants.MASS_ATMOS)
 
     return total_tend
-
